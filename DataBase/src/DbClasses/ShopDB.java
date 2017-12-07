@@ -109,11 +109,11 @@ public class ShopDB {
         }
     }
 
-    public static int getCountOfProduct(ShoppingCart cart) {
+    public static int getCountOfProductByCartId(int id) {
 
         int count = 0;
         String query = "SELECT (COUNT(product_id)) as count  "
-                + "FROM product WHERE product.cart_id=" + "(SELECT cart_id FROM carts WHERE c_title=" + "'" + cart.getTitle() + "');";
+                + "FROM product, carts WHERE carts.cart_id="+"'"+ id+"'"+" and product.cart_id=carts.cart_id  ;";
         ResultSet res = sql.executeQuery(query);
 
         try {
@@ -126,12 +126,11 @@ public class ShopDB {
             return count;
         }
     }
-
-    public static int getSumOfCart(ShoppingCart cart) {
+    public static int getSumOfCart(int id) {
 
         int sum = 0;
         String query = "SELECT (SUM(price)) AS sum "
-                + "FROM product WHERE product.cart_id=" + "(SELECT cart_id FROM carts WHERE c_title=" + "'" + cart.getTitle() + "');";
+                + "FROM product, carts WHERE  carts.cart_id="+"'"+ id+"'"+" and product.cart_id=carts.cart_id  ;";
         ResultSet res = sql.executeQuery(query);
 
         try {
@@ -176,6 +175,37 @@ public class ShopDB {
         }
     }
 
+    public static ShoppingCart getAllProduct(int id)
+    {
+        ShoppingCart cart;
+        cart = new ShoppingCart();
+        String query = "SELECT title, type, dateofproduction, price, shifttime, c_title "
+                + "FROM product p,carts c WHERE p.cart_id = c.cart_id and  c.cart_id="+"'"+ id+"'"+" ;";
+        
+         ResultSet res = sql.executeQuery(query);
+        try {
+            while (res.next()) {
+                String title = res.getString("title");
+                String type = res.getString("type");
+                Date date1 = res.getDate("dateOfProduction") ;
+                LocalDate dateOfProduction = date1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                int price = res.getInt("price");
+                Date date2 = res.getDate("dateOfProduction") ;
+                LocalDate shiftTime = date2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                String c_title = res.getString("c_title");
+                Product p;
+                p = new Product.Builder().setTitle(title).setType(type).setPrice(price).
+                setDateOfProduction(dateOfProduction).
+                setShiftTime(shiftTime).createProduct();
+                cart.addProduct(p);
+        
+            }
+        } catch (SQLException e) {
+            System.out.println("Exception: " + e.getMessage());
+        }
+       
+       return cart; 
+    }
     public static void outputCart() {
 
         String query = "SELECT title, type, dateofproduction, price, shifttime, c_title "
